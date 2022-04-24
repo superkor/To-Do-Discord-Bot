@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#Google API credentials
+credential.json
+token.json
+
+#Discord Bot 
+token.txt
