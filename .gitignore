@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 #Google API credentials
-credential.json
+credentials.json
 token.json
 
 #Discord Bot 
