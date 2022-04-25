@@ -131,6 +131,7 @@ dmypy.json
 #Google API credentials
 credentials.json
 token.json
+calID.txt
 
 #Discord Bot 
 token.txt
