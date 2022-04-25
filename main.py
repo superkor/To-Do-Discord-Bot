@@ -7,8 +7,10 @@ TODO:
 ⏰ Deleting Events
 ⏰ Listing Events
 ⏰ Getting notifications from events
+⏰ Add garbage collection
 """
 
+from tokenize import String
 import discord
 from discord.ext import commands
 import calendarAPI
@@ -45,7 +47,12 @@ async def on_ready():
     print(f"{client.user} has connected to Discord!")
 
 """
-.newevent takes arguments title (String), location (String), startTime (String: yyyymmddhhmm), endTime(String: yyyymmddhhmm), desc (String: default=""), reminder (int: default=0), frequency (String: weekly, daily, default=""), recurrenceCount (int: default=0), recurrenceInterval (int: default=0), recurrenceEnd (String: yyyymmddhhmm default="")
+.newevent takes arguments title (String), location (String), startTime (String: yyyymmddhhmm), endTime(String: yyyymmddhhmm), 
+desc (String: default=""), reminder (int: default=0), frequency (String: weekly, daily, default=""), 
+recurrenceCount (int: default=0), recurrenceInterval (int: default=0), 
+recurrenceEnd (String: yyyymmddhhmm default=""), byday (String: MO,TU,WE,TH,FR,SA,SU default=""), rdate (String: yyyymmdd default=""),
+exdate (String: yyyymmdd default="")
+
 title sets the title of the event to given string.
 location sets the location of the event to the given string.
 startTime sets the start time (date and time) of event (time is in EST). Format: yyyymmddhhmm
@@ -53,24 +60,33 @@ endTime sets the end time (date and time) of event (time is in EST). Format: yyy
 desc sets the description of the event to the given string; if no string is provided, no description would be set.
 reminder sets when to remind the event is about to start (in minutes). Default is 30 minutes.
 frequency sets how often the event should repeat. WEEKLY repeats the event every week. DAILY repeats the event every day. Default is none (no repetition).
-recurrenceCount sets how much the event should repeat. Default is 0.
+recurrenceCount sets how much the event should repeat. If recurrenceEnd has input, recurrenceCount will be ignored. Default is 0.
 recurrenceInterval sets how much skip between events. Default is 0.
+byday sets which day of the week to repeat on. If multiple, separate by comma. Default is no specification (""). Options: MO,TU,WE,TH,FR,SA,SU
 recurrenceEnd sets the last day the event will stop repeating. Default is never (""). Format: yyyymmdd
+rdate sets which dates to include to repeat. If more than one date, separate by comma. Default is none (""). Format yyyymmdd
+exdate sets which dates to exclude from repetition. If more than one date, separate by comma. Default is none (""). Format yyymmdd
 """
-@client.command(name = "newevent", help = "Assigns the message author the role organizers")
-async def newEvent(message, title, location, startTime, endTime, desc="", reminder=30, frequency="", recurrenceCount=0, recurrenceInterval=0, recurrenceEnd = "00000000"):
+@client.command(name = "new", help = "Creates a new event using the given parameters")
+async def newEvent(message: discord.Member, title: str, location: str, startTime: str, 
+endTime: str, desc: str="", reminder: int=30, frequency: str="", 
+recurrenceCount: str=0, recurrenceInterval: str=0, byday: str="",
+recurrenceEnd: str = "00000000", rdate: str="", exdate: str=""):
     try:
         if (not startTime.isnumeric()):
             raise AllNum
         if (len(startTime) != 12 or len(endTime) != 12 or len(recurrenceEnd) != 8):
             raise DateLength
         else:
+            frequency = frequency.upper()
+            byday = byday.upper()
             #check if we are in DST (i hate dst ahh)
             utc = "05"
             if (time.localtime().tm_isdst):
                 utc = "04"
             startTime = startTime[0:4 : ] + "-" + startTime[4: 6 : ] + "-" + startTime[6: 8:] + "T" + startTime[8:10:]+":"+startTime[10: 12:]+":00-"+utc+":00"
             endTime = endTime[0:4 : ] + "-" + endTime[4: 6 : ] + "-" + endTime[6: 8:] + "T" + endTime[8:10:]+":"+endTime[10: 12:]+":00-"+utc+":00"
+            #no repetition
             if frequency == "":
                 event = {
                     "summary": title,
@@ -95,8 +111,11 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
                     }
                 }
             else:
-                if recurrenceInterval != "00000000":
-                    event = {
+                #has repetition end date
+                if recurrenceEnd != "00000000":
+                    #if there are specified days of the week
+                    if byday != "":
+                        event = {
                         "summary": title,
                         "location": location,
                         "description": desc,
@@ -109,7 +128,7 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
                             "timeZone": "America/Toronto",
                         },
                         "recurrence": [
-                            "RRULE:FREQ="+str(frequency)+";"+"COUNT="+str(recurrenceCount)+";INTERVAL="+str(recurrenceInterval)+";UNTIL="+recurrenceEnd+"0000T000000Z"
+                            "RRULE:FREQ="+str(frequency)+";"+"UNTIL="+str(recurrenceEnd)+";INTERVAL="+str(recurrenceInterval)+";BYDAY="+str(byday),
                         ],
                         "reminders": {
                             'useDefault': False,
@@ -121,9 +140,37 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
                             ]
                         }
                     }
+                    else:
+                        event = {
+                            "summary": title,
+                            "location": location,
+                            "description": desc,
+                            "start": {
+                                "dateTime": startTime,
+                                "timeZone": "America/Toronto",
+                            },
+                            "end": {
+                                "dateTime": endTime,
+                                "timeZone": "America/Toronto",
+                            },
+                            "recurrence": [
+                                "RRULE:FREQ="+str(frequency)+";"+"UNTIL="+str(recurrenceEnd)+";INTERVAL="+str(recurrenceInterval),
+                            ],
+                            "reminders": {
+                                'useDefault': False,
+                                "overrides": [
+                                    {
+                                        "method": "popup",
+                                        "minutes": reminder
+                                    }
+                                ]
+                            }
+                        }
                 #if repetition end date not inputted
                 else:
-                    event = {
+                    #if there are specified days of the week
+                    if byday != "":
+                        event = {
                         "summary": title,
                         "location": location,
                         "description": desc,
@@ -136,7 +183,7 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
                             "timeZone": "America/Toronto",
                         },
                         "recurrence": [
-                            "RRULE:FREQ="+str(frequency)+";"+"COUNT="+str(recurrenceCount)+";INTERVAL="+str(recurrenceInterval)+";"
+                            "RRULE:FREQ="+str(frequency)+";"+"COUNT="+str(recurrenceCount)+";INTERVAL="+str(recurrenceInterval)+";BYDAY="+str(byday),
                         ],
                         "reminders": {
                             'useDefault': False,
@@ -148,6 +195,32 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
                             ]
                         }
                     }
+                    else:
+                        event = {
+                            "summary": title,
+                            "location": location,
+                            "description": desc,
+                            "start": {
+                                "dateTime": startTime,
+                                "timeZone": "America/Toronto",
+                            },
+                            "end": {
+                                "dateTime": endTime,
+                                "timeZone": "America/Toronto",
+                            },
+                            "recurrence": [
+                                "RRULE:FREQ="+str(frequency)+";"+"COUNT="+str(recurrenceCount)+";INTERVAL="+str(recurrenceInterval)+";"
+                            ],
+                            "reminders": {
+                                'useDefault': False,
+                                "overrides": [
+                                    {
+                                        "method": "popup",
+                                        "minutes": reminder
+                                    }
+                                ]
+                            }
+                        }
             link = calendarAPI.createEvent(event)
             embed = discord.Embed(
                 title = title, 
@@ -159,6 +232,15 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
             embed.add_field(name = "Location", value = location, inline=False)
             embed.add_field(name = "Start Date", value = startTime, inline=False)
             embed.add_field(name = "End Date", value = endTime, inline=False)
+            if frequency!="":
+                embed.add_field(name = "Recurring", value = frequency, inline=False)
+                if recurrenceEnd !="00000000":
+                    embed.add_field(name = "Until", value = recurrenceEnd, inline=False)
+                else:
+                    embed.add_field(name = "Repeating Amount", value = recurrenceCount, inline=False)
+                embed.add_field(name = "Recurrence Interval", value = recurrenceInterval, inline=False)
+                if byday != "":
+                    embed.add_field(name = "Every", value = byday, inline=False)
             await message.channel.send(embed=embed)
     except AllNum:
         print("Incorrect Date/Time Input")
@@ -184,6 +266,9 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
         embed.add_field(name = "Uncaught Exception", value = "Please ensure your inputs are correct and try again.", inline=False)
         await message.channel.send(embed=embed)
 
+@client.command(name = "newevent", help="Creates a new event via a step-by-step guide")
+async def newEvent(message: discord.Member, title: str):
+    print("Hello")
    
 
 
