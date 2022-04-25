@@ -75,7 +75,9 @@ def main():
             print("Calendar API ready!")
         except HttpError as error:
             print('An error occurred: %s' % error)
-
+"""
+createEvent() gets event JSON from main.newEvent() and creates the event on google calendar
+"""
 def createEvent(event):
     try:
         event = service.events().insert(calendarId=calID, body=event).execute()
