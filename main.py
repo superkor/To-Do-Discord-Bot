@@ -9,6 +9,19 @@ intents = discord.Intents.default()
 intents.members = True
 client = commands.Bot(command_prefix = ".", intents=intents)
 
+class AllNum(Exception):
+    """Exception raised for string not containing all numbers"""
+    def __init__(self, message="Dates must be all numbers"):
+        self.message = message
+        super().__init__(self.message)
+
+class DateLength(Exception):
+    """Exception raised for date string not being 12 characters long"""
+    def __init__(self, message="Dates must be in this format: yyyymmddhhmm. If it is a full day event, set both starting and ending hhmm to 0."):
+        self.message = message
+        super().__init__(self.message)
+
+
 @client.event
 async def on_ready():
     #initalizes calendar API
@@ -35,47 +48,19 @@ recurrenceEnd sets the last day the event will stop repeating. Default is never 
 """
 @client.command(name = "newevent", help = "Assigns the message author the role organizers")
 async def newEvent(message, title, location, startTime, endTime, desc="", reminder=30, frequency="", recurrenceCount=0, recurrenceInterval=0, recurrenceEnd = "00000000"):
-    creator = message.author
-    if (len(startTime) != 12 or len(endTime) != 12 or len(recurrenceEnd) != 8):
-        embed = discord.Embed(
-                title = "Error", 
-                description = "Invalid Date/time.",
-                color = discord.Color.red())
-        embed.add_field(name = "They must be in this format: yyyymmddhhmm.", value = "If it is a full day event, set both starting and ending hhmm to 0.", inline= False)
-        await message.channel.send(embed=embed)
-        print("Incorrect Date/Time Input")
-    else:
-        #check if we are in DST (i hate dst ahh)
-        utc = "05"
-        if (time.localtime().tm_isdst):
-            utc = "04"
-        startTime = startTime[0:4 : ] + "-" + startTime[4: 6 : ] + "-" + startTime[6: 8:] + "T" + startTime[8:10:]+":"+startTime[10: 12:]+":00-"+utc+":00"
-        endTime = endTime[0:4 : ] + "-" + endTime[4: 6 : ] + "-" + endTime[6: 8:] + "T" + endTime[8:10:]+":"+endTime[10: 12:]+":00-"+utc+":00"
-        if frequency == "":
-            event = {
-                "summary": title,
-                "location": location,
-                "description": desc,
-                "start": {
-                    "dateTime": startTime,
-                    "timeZone": "America/Toronto",
-                },
-                "end": {
-                    "dateTime": endTime,
-                    "timeZone": "America/Toronto",
-                },
-                "reminders": {
-                    'useDefault': False,
-                    "overrides": [
-                        {
-                            "method": "popup",
-                            "minutes": reminder
-                        }
-                    ]
-                }
-            }
+    try:
+        if (not startTime.isnumeric()):
+            raise AllNum
+        if (len(startTime) != 12 or len(endTime) != 12 or len(recurrenceEnd) != 8):
+            raise DateLength
         else:
-            if recurrenceInterval != "00000000":
+            #check if we are in DST (i hate dst ahh)
+            utc = "05"
+            if (time.localtime().tm_isdst):
+                utc = "04"
+            startTime = startTime[0:4 : ] + "-" + startTime[4: 6 : ] + "-" + startTime[6: 8:] + "T" + startTime[8:10:]+":"+startTime[10: 12:]+":00-"+utc+":00"
+            endTime = endTime[0:4 : ] + "-" + endTime[4: 6 : ] + "-" + endTime[6: 8:] + "T" + endTime[8:10:]+":"+endTime[10: 12:]+":00-"+utc+":00"
+            if frequency == "":
                 event = {
                     "summary": title,
                     "location": location,
@@ -88,9 +73,6 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
                         "dateTime": endTime,
                         "timeZone": "America/Toronto",
                     },
-                    "recurrence": [
-                        "RRULE:FREQ="+str(frequency)+";"+"COUNT="+str(recurrenceCount)+";INTERVAL="+str(recurrenceInterval)+";UNTIL="+recurrenceEnd+"0000T000000Z"
-                    ],
                     "reminders": {
                         'useDefault': False,
                         "overrides": [
@@ -101,35 +83,61 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
                         ]
                     }
                 }
-            #if repetition end date not inputted
             else:
-                event = {
-                    "summary": title,
-                    "location": location,
-                    "description": desc,
-                    "start": {
-                        "dateTime": startTime,
-                        "timeZone": "America/Toronto",
-                    },
-                    "end": {
-                        "dateTime": endTime,
-                        "timeZone": "America/Toronto",
-                    },
-                    "recurrence": [
-                        "RRULE:FREQ="+str(frequency)+";"+"COUNT="+str(recurrenceCount)+";INTERVAL="+str(recurrenceInterval)+";"
-                    ],
-                    "reminders": {
-                        'useDefault': False,
-                        "overrides": [
-                            {
-                                "method": "popup",
-                                "minutes": reminder
-                            }
-                        ]
+                if recurrenceInterval != "00000000":
+                    event = {
+                        "summary": title,
+                        "location": location,
+                        "description": desc,
+                        "start": {
+                            "dateTime": startTime,
+                            "timeZone": "America/Toronto",
+                        },
+                        "end": {
+                            "dateTime": endTime,
+                            "timeZone": "America/Toronto",
+                        },
+                        "recurrence": [
+                            "RRULE:FREQ="+str(frequency)+";"+"COUNT="+str(recurrenceCount)+";INTERVAL="+str(recurrenceInterval)+";UNTIL="+recurrenceEnd+"0000T000000Z"
+                        ],
+                        "reminders": {
+                            'useDefault': False,
+                            "overrides": [
+                                {
+                                    "method": "popup",
+                                    "minutes": reminder
+                                }
+                            ]
+                        }
                     }
-                }
-        link = calendarAPI.createEvent(event)
-        if (link != "0"):
+                #if repetition end date not inputted
+                else:
+                    event = {
+                        "summary": title,
+                        "location": location,
+                        "description": desc,
+                        "start": {
+                            "dateTime": startTime,
+                            "timeZone": "America/Toronto",
+                        },
+                        "end": {
+                            "dateTime": endTime,
+                            "timeZone": "America/Toronto",
+                        },
+                        "recurrence": [
+                            "RRULE:FREQ="+str(frequency)+";"+"COUNT="+str(recurrenceCount)+";INTERVAL="+str(recurrenceInterval)+";"
+                        ],
+                        "reminders": {
+                            'useDefault': False,
+                            "overrides": [
+                                {
+                                    "method": "popup",
+                                    "minutes": reminder
+                                }
+                            ]
+                        }
+                    }
+            link = calendarAPI.createEvent(event)
             embed = discord.Embed(
                 title = title, 
                 url = link,
@@ -141,13 +149,29 @@ async def newEvent(message, title, location, startTime, endTime, desc="", remind
             embed.add_field(name = "Start Date", value = startTime, inline=False)
             embed.add_field(name = "End Date", value = endTime, inline=False)
             await message.channel.send(embed=embed)
-        else:
-            embed = discord.Embed(
-                title = "Error",
-                description = "Event Failed to be Created.",
-                color = discord.Color.red())
-            embed.add_field(name = link, value = "Please Try Again!", inline= False)
-            await message.channel.send(embed=embed)
+    except AllNum:
+        print("Incorrect Date/Time Input")
+        embed = discord.Embed(
+            title = "Error", 
+            description = "Event Has Not Been Created.",
+            color = discord.Color.red())
+        embed.add_field(name = "AllNum Exception", value = "Please ensure all date inputs are numerical.", inline=False)
+        await message.channel.send(embed=embed)
+    except DateLength:
+        print("Incorrect Date Length Input")
+        embed = discord.Embed(
+            title = "Error", 
+            description = "Event Has Not Been Created.",
+            color = discord.Color.red())
+        embed.add_field(name = "DateLength Exception", value = "Dates must be in this format: yyyymmddhhmm. If it is a full day event, set both starting and ending hhmm to 0.", inline=False)
+        await message.channel.send(embed=embed)
+    except:
+        embed = discord.Embed(
+            title = "Error", 
+            description = "Event Has Not Been Created.",
+            color = discord.Color.red())
+        embed.add_field(name = "Uncaught Exception", value = "Please ensure your inputs are correct and try again.", inline=False)
+        await message.channel.send(embed=embed)
 
    
 
