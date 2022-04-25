@@ -1,3 +1,14 @@
+"""
+TODO:
+✔️ Creating Events
+⏰ Create Events using step-by-step commands
+⏰ Modify Events
+⏰ Modify Events using step-by-step commands
+⏰ Deleting Events
+⏰ Listing Events
+⏰ Getting notifications from events
+"""
+
 import discord
 from discord.ext import commands
 import calendarAPI
