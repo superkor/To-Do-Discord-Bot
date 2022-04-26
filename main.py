@@ -14,7 +14,10 @@ from tokenize import String
 import discord
 from discord.ext import commands
 import calendarAPI
+import datetime
+import asyncio
 import time
+import calendar
 
 token = open("token.txt", "r").readline()
 
@@ -47,31 +50,28 @@ async def on_ready():
     print(f"{client.user} has connected to Discord!")
 
 """
-.newevent takes arguments title (String), location (String), startTime (String: yyyymmddhhmm), endTime(String: yyyymmddhhmm), 
-desc (String: default=""), reminder (int: default=0), frequency (String: weekly, daily, default=""), 
+.newevent takes arguments title (String), desc (String), startTime (String: yyyymmddhhmm), endTime(String: yyyymmddhhmm), 
+location (String default=""), reminder (int: default=0), frequency (String: weekly, daily, default=""), 
 recurrenceCount (int: default=0), recurrenceInterval (int: default=0), 
-recurrenceEnd (String: yyyymmddhhmm default=""), byday (String: MO,TU,WE,TH,FR,SA,SU default=""), rdate (String: yyyymmdd default=""),
-exdate (String: yyyymmdd default="")
+recurrenceEnd (String: yyyymmddhhmm default=""), byday (String: MO,TU,WE,TH,FR,SA,SU default="")
 
 title sets the title of the event to given string.
-location sets the location of the event to the given string.
+desc sets the description of the event to the given string; 
 startTime sets the start time (date and time) of event (time is in EST). Format: yyyymmddhhmm
 endTime sets the end time (date and time) of event (time is in EST). Format: yyyymmddhhmm
-desc sets the description of the event to the given string; if no string is provided, no description would be set.
+location sets the location of the event to the given string. if no string is provided, no location would be set.
 reminder sets when to remind the event is about to start (in minutes). Default is 30 minutes.
 frequency sets how often the event should repeat. WEEKLY repeats the event every week. DAILY repeats the event every day. Default is none (no repetition).
 recurrenceCount sets how much the event should repeat. If recurrenceEnd has input, recurrenceCount will be ignored. Default is 0.
 recurrenceInterval sets how much skip between events. Default is 0.
 byday sets which day of the week to repeat on. If multiple, separate by comma. Default is no specification (""). Options: MO,TU,WE,TH,FR,SA,SU
 recurrenceEnd sets the last day the event will stop repeating. Default is never (""). Format: yyyymmdd
-rdate sets which dates to include to repeat. If more than one date, separate by comma. Default is none (""). Format yyyymmdd
-exdate sets which dates to exclude from repetition. If more than one date, separate by comma. Default is none (""). Format yyymmdd
 """
 @client.command(name = "new", help = "Creates a new event using the given parameters")
-async def newEvent(message: discord.Member, title: str, location: str, startTime: str, 
-endTime: str, desc: str="", reminder: int=30, frequency: str="", 
+async def newEvent(message: discord.Member, title: str, desc: str, startTime: str, 
+endTime: str, location: str="", reminder: int=30, frequency: str="", 
 recurrenceCount: str=0, recurrenceInterval: str=0, byday: str="",
-recurrenceEnd: str = "00000000", rdate: str="", exdate: str=""):
+recurrenceEnd: str = "00000000"):
     try:
         if (not startTime.isnumeric()):
             raise AllNum
@@ -267,8 +267,78 @@ recurrenceEnd: str = "00000000", rdate: str="", exdate: str=""):
         await message.channel.send(embed=embed)
 
 @client.command(name = "newevent", help="Creates a new event via a step-by-step guide")
-async def newEvent(message: discord.Member, title: str):
-    print("Hello")
+async def create(message: discord.Member):
+    """
+    newCheck() will check user input and the bot will only respond if the conditions are met 
+    """
+    now = datetime.datetime.now()
+    def checkDay(year:int, month: int, day: int):
+        lastDayOfMonths = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        if calendar.isleap(year):
+            lastDayOfMonths[2] = 29
+        return (now.day <= day <= lastDayOfMonths[month])
+    def checkText(msg):
+        return msg.author == message.author and msg.channel == message.channel
+    def checkTime(msg):
+        if (msg.author == message.author and msg.channel == message.channel):
+            msg = msg.content
+            print(msg[0:4:]+ " "+ msg[4:6:] + " " + msg[6:8: ])
+            if msg.isnumeric():
+                print("yes")
+                if len(msg) == 8 and int(msg [0:4:]) >= now.year and int(msg[4:6:])>=now.month and int(msg[4:6:])<13:
+                    print("yes")
+                    if checkDay(int(msg[0:4]),int(msg[4:6:]), int(msg[6:8:])):
+                        print("yes")
+                        return True
+        return False
+    try:
+        embed = discord.Embed(
+            title = "Creating an Event", 
+            color = discord.Color.orange())
+        embed.add_field(name= "Title", value = "Please enter the name of the event", inline=False)
+        await message.channel.send(embed=embed)
+        title = await client.wait_for("message", check=checkText, timeout = 15)
+        title = title.content
+        print(title)
+
+        embed = discord.Embed(
+            title = "Creating an Event", 
+            color = discord.Color.orange())
+        embed.add_field(name= "Description", value = "Please enter the description of the event", inline=False)
+        await message.channel.send(embed=embed)
+        desc = await client.wait_for("message", check=checkText, timeout = 15)
+        desc = desc.content
+        print(desc)
+
+        embed = discord.Embed(
+            title = "Creating an Event", 
+            color = discord.Color.orange())
+        embed.add_field(name= "Start Time", value = "Please enter the start time of the event", inline=False)
+        embed.add_field(name= "Format", value = "Input time as yyyymmdd", inline=False)
+        await message.channel.send(embed=embed)
+        startTime = await client.wait_for("message", check=checkTime, timeout = 15)
+        startTime = startTime.content
+        print(startTime)
+
+    except asyncio.TimeoutError:
+            print("Timed out; received no valid user inputs")
+            embed = discord.Embed(
+                title = "Error", 
+                description = "Event Has Not Been Created.",
+                color = discord.Color.red())
+            embed.add_field(name = "Timed Out", value = "Process cancelled. Please invoke .newevent if you wish to create an event.", inline=False)
+            await message.channel.send(embed=embed)
+    
+    """ except:
+        embed = discord.Embed(
+            title = "Error", 
+            description = "Event Has Not Been Created.",
+            color = discord.Color.red())
+        embed.add_field(name = "Uncaught Exception", value = "Please ensure your inputs are correct and try again.", inline=False)
+        await message.channel.send(embed=embed) """
+
+
+
    
 
 
