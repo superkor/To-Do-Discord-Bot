@@ -2,30 +2,28 @@
 TODO:
 ✔️ Creating Events
 ✔️ Create Events using step-by-step commands
-⏰ Listing Events
+✔️ Listing Events
 ⏰ Modify Events
 ⏰ Modify Events using step-by-step commands
 ⏰ Deleting Events
 ⏰ Getting notifications from events
 ⏰ Add garbage collection
+✔️ Runtime command (for the fun of it lol)
 """
 
 from distutils.log import error
 from tokenize import String
 import discord
 from discord.ext import commands
-import calendarAPI
-import datetime
-import asyncio
-import time
-import calendar
-import event 
+import calendarAPI, datetime, asyncio, time, calendar, event, pytz
 
 token = open("token.txt", "r").readline()
 
 intents = discord.Intents.default()
 intents.members = True
 client = commands.Bot(command_prefix = ".", intents=intents)
+
+botStarted = datetime.datetime.utcnow()
 
 class AllNum(Exception):
     """Exception raised for string not containing all numbers"""
@@ -120,6 +118,7 @@ recurrenceEnd: str = "00000000"):
                 title = title, 
                 url = link,
                 description = "Event Created Successfully!",
+                timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
                 color = discord.Color.blue())
             embed.set_author(name = message.author.display_name, icon_url = message.author.avatar_url)
             embed.add_field(name = "Description", value = desc, inline=False)
@@ -264,7 +263,9 @@ async def create(message: discord.Member):
         #title
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "Title", value = "Please enter the name of the event", inline=False)
         await message.channel.send(embed=embed)
         title = await client.wait_for("message", check=checkText, timeout = 60)
@@ -274,7 +275,9 @@ async def create(message: discord.Member):
         #Description
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "Description", value = "Please enter the description of the event", inline=False)
         await message.channel.send(embed=embed)
         desc = await client.wait_for("message", check=checkText, timeout = 60)
@@ -284,7 +287,9 @@ async def create(message: discord.Member):
         #Start Date
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "Start Date", value = "Please enter the start Date of the event", inline=False)
         embed.add_field(name= "Format", value = "Input time as yyyymmdd", inline=False)
         await message.channel.send(embed=embed)
@@ -295,7 +300,9 @@ async def create(message: discord.Member):
         #Start Time
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "Start Time", value = "Please enter the start time of the event", inline=False)
         embed.add_field(name= "Format", value = "Input time as hhmm (24 hour) or hh:mm <am/pm>", inline=False)
         await message.channel.send(embed=embed)
@@ -309,7 +316,9 @@ async def create(message: discord.Member):
         #End Date
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "End Date", value = "Please enter the end date of the event", inline=False)
         embed.add_field(name= "Format", value = "Input time as yyyymmdd", inline=False)
         await message.channel.send(embed=embed)
@@ -321,7 +330,9 @@ async def create(message: discord.Member):
         #End Time
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "End Time", value = "Please enter the end time of the event", inline=False)
         embed.add_field(name= "Format", value = "Input time as hhmm (24 hour) or hh:mm <am/pm>", inline=False)
         await message.channel.send(embed=embed)
@@ -345,7 +356,9 @@ async def create(message: discord.Member):
         #Location
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "Location", value = "Please enter the location of the event", inline=False)
         await message.channel.send(embed=embed)
         location = await client.wait_for("message", check=checkText, timeout = 60)
@@ -355,7 +368,9 @@ async def create(message: discord.Member):
         #Reminder
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "Reminder", value = "Please enter when you want a reminder before the event starts (in minutes)?", inline=False)
         await message.channel.send(embed=embed)
         reminder = await client.wait_for("message", check=checkNum, timeout = 60)
@@ -366,7 +381,9 @@ async def create(message: discord.Member):
         #Frequency
         embed = discord.Embed(
             title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "Frequency", value = "Please enter DAILY/WEEKLY/NONE if you wish to have the event repeat daily, repeat weekly, or to not repeat.", inline=False)
         await message.channel.send(embed=embed)
         frequency = await client.wait_for("message", check=checkFreq, timeout = 60)
@@ -382,9 +399,11 @@ async def create(message: discord.Member):
             #recurrenceEnd or Count
             embed = discord.Embed(
                 title = "Creating an Event", 
+                timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
                 color = discord.Color.orange())
             embed.add_field(name= "Recurrence End", value = "Please enter a date (yyyymmdd) you want the repetition to end on or enter a number of times (<=100) you wish the event to repeat.", inline=False)
             embed.add_field(name= "Infinite Repeat", value = "Please enter 0 to have the event infinitely repeat.", inline=False)
+            embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
             await message.channel.send(embed=embed)
             recEnd = await client.wait_for("message", check=checkRecEnd, timeout = 60)
             recEnd = recEnd.content
@@ -398,8 +417,10 @@ async def create(message: discord.Member):
             
             #recurrenceInterval
             embed = discord.Embed(
-                title = "Creating an Event", 
-                color = discord.Color.orange())
+            title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+            color = discord.Color.orange())
+            embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
             embed.add_field(name= "Recurrence Interval", value = "Please enter how often you want the event to repeat (Max 10).", inline=False)
             await message.channel.send(embed=embed)
             recurrenceInterval = await client.wait_for("message", check=checkInterval, timeout = 60)
@@ -408,8 +429,10 @@ async def create(message: discord.Member):
 
             #recurrenceInterval
             embed = discord.Embed(
-                title = "Creating an Event", 
-                color = discord.Color.orange())
+            title = "Creating an Event", 
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+            color = discord.Color.orange())
+            embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
             embed.add_field(name= "Recurrence ByDay", value = "Please enter the day of the week you want the event to repeat (MO,TU,WE,TH,FR,SA,SU).", inline=False)
             embed.add_field(name= "Skip Recurrence ByDay", value = "Please enter \"NO\" to skip.", inline=False)
             await message.channel.send(embed=embed)
@@ -420,7 +443,7 @@ async def create(message: discord.Member):
             #infinite repeat
             if (unlimited):
                 #No ByDay
-                if (byday.content.upper() == "NO"):
+                if (byday.upper() == "NO"):
                     newEvent = event.repeatForevernoByDay(title, desc, startTime, endTime, location, reminder, frequency, recurrenceInterval)
                 else:
                     newEvent = event.repeatForever(title, desc, startTime, endTime, location, reminder, frequency, recurrenceInterval, byday) 
@@ -429,14 +452,14 @@ async def create(message: discord.Member):
                 #recurrence end date set
                 if recurrenceCount == -1:
                     #no byday
-                    if (byday.content.upper() == "NO"):
+                    if (byday.upper() != "NO"):
                         newEvent = event.hasFreqEndDate(title, desc, startTime, endTime, location, reminder, frequency, recurrenceEnd, recurrenceInterval, byday)
                     else:
                         newEvent = event.hasFreqEndDateNoByDay(title, desc, startTime, endTime, location, reminder, frequency, recurrenceEnd, recurrenceInterval)   
                 #recurrence count set
                 else:
                     #no byday
-                    if (byday.content.upper() == "NO"):
+                    if (byday.upper() != "NO"):
                         newEvent = event.onlyCount(title, desc, startTime, endTime, location, reminder, frequency, recurrenceCount, recurrenceInterval, byday)
                     else:
                         newEvent = event.onlyCountnoByDay(title, desc, startTime, endTime, location, reminder, frequency, recurrenceCount, recurrenceInterval)
@@ -449,6 +472,7 @@ async def create(message: discord.Member):
             title = title, 
             url = link,
             description = "Event Created Successfully!",
+            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.blue())
         embed.set_author(name = message.author.display_name, icon_url = message.author.avatar_url)
         embed.add_field(name = "Description", value = desc, inline=False)
@@ -466,6 +490,8 @@ async def create(message: discord.Member):
             embed.add_field(name = "Recurrence Interval", value = recurrenceInterval, inline=False)
             if byday != "NO":
                 embed.add_field(name = "Every", value = byday, inline=False)
+        
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         await message.channel.send(embed=embed)
 
 
@@ -479,24 +505,53 @@ async def create(message: discord.Member):
             embed.add_field(name = "Timed Out", value = "Process cancelled. Please invoke .newevent if you wish to create an event.", inline=False)
             await message.channel.send(embed=embed)
     
-    """ except:
+    except:
         embed = discord.Embed(
             title = "Error", 
             description = "Event Has Not Been Created.",
             color = discord.Color.red())
         embed.add_field(name = "Uncaught Exception", value = "Please ensure your inputs are correct and try again.", inline=False)
-        await message.channel.send(embed=embed) """
+        await message.channel.send(embed=embed)
 
 @client.command(name = "listevents", help="Lists next 5 upcoming events")
 async def create(message: discord.Member):
-    listEvents = calendarAPI.listEvents()
-    print (listEvents)
-    embed = discord.Embed(
-            title = "Next 10 upcoming events", 
-            color = discord.Color.green())
-    embed.add_field(name="Title", value="[Desc](https://google.ca)")
-    await message.channel.send(embed=embed)
-   
+    try:
+        listEvents = calendarAPI.listEvents()
+        #print (listEvents)
 
+        if listEvents is None:
+            embed = discord.Embed(
+                title = "There are no upcoming events",
+                description = "Do .newevent to add events to the calendar!", 
+                color = discord.Color.red(),
+                timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern"))
+                )
+            
+        else:
+            embed = discord.Embed(
+                title = "Next 6 upcoming events", 
+                color = discord.Color.green(),
+                timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern"))
+                )
+            for currEvent in listEvents:
+                embed.add_field(name=currEvent['summary'], value="["+currEvent['description']+"]("+currEvent['htmlLink']+")\n"+ currEvent['start']['dateTime'][0:10]+ " "+currEvent['start']['dateTime'][11:16]+" to "+currEvent['end']['dateTime'][0:10]+ " "+currEvent['end']['dateTime'][11:16]+"\nLocation: "+currEvent['location'], inline=True)
+        embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
+        await message.channel.send(embed=embed)
+    
+    except:
+        embed = discord.Embed(
+            title = "Error", 
+            description = "An Error Has Occured. Please try again.",
+            color = discord.Color.red())
+        await message.channel.send(embed=embed)
 
+@client.command(name="runtime", help="See how long the bot has been up for!")
+async def runTime(message):
+    now = datetime.datetime.utcnow()
+    elapsed = now - botStarted
+    seconds = elapsed.seconds
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    print("Running for {}d {}h {}m {}s".format(elapsed.days, hours, minutes, seconds))
+    await message.channel.send("Running for {}d {}h {}m {}s".format(elapsed.days, hours, minutes, seconds))
 client.run(token)
