@@ -96,7 +96,7 @@ def listEvents():
         events = events_result.get('items', [])
 
         if not events:
-            return 0
+            return None
         else:
             return events
 
