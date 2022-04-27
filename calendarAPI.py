@@ -87,6 +87,22 @@ def createEvent(event):
         print('An error occurred: %s' % error)
         return error
 
+def listEvents():
+    try:
+        now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+        events_result = service.events().list(calendarId=calID, timeMin=now,
+                                              maxResults=6, singleEvents=True,
+                                              orderBy='startTime').execute()
+        events = events_result.get('items', [])
+
+        if not events:
+            return 0
+        else:
+            return events
+
+    except HttpError as error:
+        print('An error occurred: %s' % error)
+        return error
 
 if __name__ == '__main__':
     main()
