@@ -129,5 +129,13 @@ def modifyEvent(event):
         print('An error occurred: %s' % error)
         return error
 
+def deleteEvent(event):
+    try:
+        service.events().delete(calendarId=calID, eventId=event['id']).execute()
+        print("Event Deleted")
+    except HttpError as error:
+        print('An error occurred: %s' % error)
+        return error
+
 if __name__ == '__main__':
     main()
