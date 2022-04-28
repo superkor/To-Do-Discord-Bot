@@ -3,15 +3,15 @@ TODO:
 ✔️ Creating Events
 ✔️ Create Events using step-by-step commands
 ✔️ Listing Events
-⏰ Modify Events
-⏰ Modify Events using step-by-step commands
-⏰ Deleting Events
+✔️ Modify Events using step-by-step commands
+⏰ Deleting Events using step-by-step commands
 ⏰ Getting notifications from events
 ⏰ Add garbage collection
 ✔️ Runtime command (for the fun of it lol)
 """
 
 from distutils.log import error
+from lib2to3.pytree import convert
 from tokenize import String
 import discord
 from discord.ext import commands
@@ -67,7 +67,7 @@ byday sets which day of the week to repeat on. If multiple, separate by comma. D
 recurrenceCount sets how much the event should repeat. If recurrenceEnd has input, recurrenceCount will be ignored. Default is 0.
 recurrenceEnd sets the last day the event will stop repeating. Default is never (""). Format: yyyymmdd
 """
-@client.command(name = "new", help = "Creates a new event using the given parameters")
+@client.command(name = "new", help = "Creates a new event using the given parameters.")
 async def newEvent(message: discord.Member, title: str, desc: str, startTime: str, 
 endTime: str, location: str="", reminder: int=30, frequency: str="", 
 recurrenceInterval: str=0, byday: str="", recurrenceCount: str=0,
@@ -161,7 +161,7 @@ recurrenceEnd: str = "00000000"):
         embed.add_field(name = "Uncaught Exception", value = "Please ensure your inputs are correct and try again.", inline=False)
         await message.channel.send(embed=embed)
 
-@client.command(name = "newevent", help="Creates a new event via a step-by-step guide")
+@client.command(name = "newevent", help="Creates a new event via a step-by-step guide.")
 async def create(message: discord.Member):
     """
     newCheck() will check user input and the bot will only respond if the conditions are met 
@@ -171,7 +171,7 @@ async def create(message: discord.Member):
         lastDayOfMonths = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
         if calendar.isleap(year):
             lastDayOfMonths[2] = 29
-        return (now.day <= day <= lastDayOfMonths[month])
+        return (day <= lastDayOfMonths[month])
     def checkText(msg):
         return msg.author == message.author and msg.channel == message.channel
     def checkDate(msg):
@@ -204,7 +204,7 @@ async def create(message: discord.Member):
             elif (len(time) == 8): #03:59 am
                 if(time[0:2:].isnumeric() and time[3:4:].isnumeric()):
                     #check if hours are between 0 and 12 (inclusive) and minutes are between 0 and 59 (inclusive)
-                    if (int(time[0:2:]) >=0 and int(time[0:2:]) <=12 and int(time[3:4:]) >=0 and int(time[3:5:])<= 59):
+                    if (int(time[0:2:]) >=0 and int(time[0:2:]) <=12 and int(time[3:5:]) >=0 and int(time[3:5:])<= 59):
                         #check if msg[6:8:] is am or pm
                         if (time[6:8:].lower() == "am" or time[6:8:].lower() =="pm"):
                             return True
@@ -270,7 +270,6 @@ async def create(message: discord.Member):
         await message.channel.send(embed=embed)
         title = await client.wait_for("message", check=checkText, timeout = 60)
         title = title.content
-        print(title)
 
         #Description
         embed = discord.Embed(
@@ -282,7 +281,6 @@ async def create(message: discord.Member):
         await message.channel.send(embed=embed)
         desc = await client.wait_for("message", check=checkText, timeout = 60)
         desc = desc.content
-        print(desc)
 
         #Start Date
         embed = discord.Embed(
@@ -290,13 +288,12 @@ async def create(message: discord.Member):
             timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
         embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
-        embed.add_field(name= "Start Date", value = "Please enter the start Date of the event", inline=False)
-        embed.add_field(name= "Format", value = "Input time as yyyymmdd", inline=False)
+        embed.add_field(name= "Start Date", value = "Please enter the start date of the event", inline=False)
+        embed.add_field(name= "Format", value = "Input date as yyyymmdd", inline=False)
         await message.channel.send(embed=embed)
         startDate = await client.wait_for("message", check=checkDate, timeout = 60)
         startDate = startDate.content
-        print(startDate)
-
+     
         #Start Time
         embed = discord.Embed(
             title = "Creating an Event", 
@@ -311,7 +308,6 @@ async def create(message: discord.Member):
 
         #format time to be hhmm (24 hour) if it isn't already
         startTime = convertToMilTime(startTime)
-        print(startTime)
 
         #End Date
         embed = discord.Embed(
@@ -320,11 +316,10 @@ async def create(message: discord.Member):
             color = discord.Color.orange())
         embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name= "End Date", value = "Please enter the end date of the event", inline=False)
-        embed.add_field(name= "Format", value = "Input time as yyyymmdd", inline=False)
+        embed.add_field(name= "Format", value = "Input date as yyyymmdd", inline=False)
         await message.channel.send(embed=embed)
         endDate = await client.wait_for("message", check=checkEndDate, timeout = 60)
         endDate = endDate.content
-        print(endDate)
 
 
         #End Time
@@ -338,11 +333,9 @@ async def create(message: discord.Member):
         await message.channel.send(embed=embed)
         endTime = await client.wait_for("message", check=checkEndTime, timeout = 60)
         endTime = endTime.content
-        print(endTime)
 
         #format time to be hhmm (24 hour) if it isn't already
         endTime = convertToMilTime(endTime) 
-        print(endTime)
 
 
         #check if we are in DST (i hate dst ahh)
@@ -494,8 +487,6 @@ async def create(message: discord.Member):
         embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         await message.channel.send(embed=embed)
 
-
-
     except asyncio.TimeoutError:
             print("Timed out; received no valid user inputs")
             embed = discord.Embed(
@@ -513,7 +504,7 @@ async def create(message: discord.Member):
         embed.add_field(name = "Uncaught Exception", value = "Please ensure your inputs are correct and try again.", inline=False)
         await message.channel.send(embed=embed)
 
-@client.command(name = "listevents", help="Lists next 5 upcoming events")
+@client.command(name = "listevents", help="Lists next 5 upcoming events.")
 async def create(message: discord.Member):
     try:
         listEvents = calendarAPI.listEvents()
@@ -554,4 +545,353 @@ async def runTime(message):
     hours, minutes = divmod(minutes, 60)
     print("Running for {}d {}h {}m {}s".format(elapsed.days, hours, minutes, seconds))
     await message.channel.send("Running for {}d {}h {}m {}s".format(elapsed.days, hours, minutes, seconds))
+
+@client.command(name="modifyevent", help="Modifies an existing event.")
+async def modifyEvent(message):
+
+    selection = "NEXT"
+    listEvents = []
+    now = datetime.datetime.now()
+
+    def getDate(date):
+        date = datetime.datetime.fromisoformat(date)
+        month = date.month
+        day = date.day
+        if len(str(month)) == 1:
+            month = "0"+str(month)
+        if len(str(day)) == 1:
+            day = "0"+str(day)
+        return str(date.year)+"-"+str(date.month)+"-"+str(date.day)
+
+    def getTime(time):
+        time = datetime.datetime.fromisoformat(time)
+        hour = time.hour
+        min = time.minute
+
+        if len(str(hour)) == 1:
+            hour = "0"+str(hour)
+        if len(str(min)) == 1:
+            min = "0"+str(min)
+
+        return str(hour)+":"+str(min)
+
+    def checkFromAuthor(msg):
+        return msg.author == message.author and msg.channel == message.channel
+    def selectionCheck(msg):
+        selectChoices = ['1', '2', '3', '4', '5', '6', 'NEXT', 'CANCEL']
+        if checkFromAuthor(msg):
+            return msg.content.upper() in selectChoices
+        return False    
+
+    def select(timeMin):
+        #get next 6 events from given time (utc)
+        nextEvents = calendarAPI.listEventsFromDate(timeMin)
+        return nextEvents
+
+    def checkDay(year:int, month: int, day: int):
+        lastDayOfMonths = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+        if calendar.isleap(year):
+            lastDayOfMonths[2] = 29
+        return (day <= lastDayOfMonths[month])
+    def checkDate(msg):
+        #check if date is valid
+        if (msg.author == message.author and msg.channel == message.channel):
+            if msg.content.upper() == "SKIP":
+                return True
+            date = msg.content
+            if date.isnumeric():
+                if len(date) == 8 and int(date [0:4:]) >= now.year and int(date[4:6:])>=now.month and int(date[4:6:])<13:
+                    if checkDay(int(date[0:4]),int(date[4:6:]), int(date[6:8:])):
+                        return True
+        return False
+    def checkEndDate(msg):
+        if (msg.author == message.author and msg.channel == message.channel):
+            if msg.content.upper() == "SKIP":
+                return True
+            #get starttime from event
+            startTime = selectedEvent['start']['dateTime'][0:10].replace("-","")
+            #check if date is valid
+            if (checkDate(msg)):
+                #check if end date is the same date as the start date or happening after the start date
+                if int(startTime) <= int(msg.content):
+                    return True
+        return False
+
+    def checkTime(msg):
+        #check if time is valid
+        if (msg.author == message.author and msg.channel == message.channel):
+            time = msg.content
+            if msg.content.upper() == "SKIP":
+                return True
+            #24 hour
+            if (len(time) == 4 and time.isnumeric()):
+                #check if time given is between 0000 (inclusive) and 2400 (exclusive) and the minutes are between 00 and 59.
+                if (int(time)>=0 and int(time)<2400 and int(time[0:2:])<=59):
+                    return True
+            #12 hour
+            elif (len(time) == 8): #03:59 am
+                if(time[0:2:].isnumeric() and time[3:4:].isnumeric()):
+                    #check if hours are between 0 and 12 (inclusive) and minutes are between 0 and 59 (inclusive)
+                    if (int(time[0:2:]) >=0 and int(time[0:2:]) <=12 and int(time[3:5:]) >=0 and int(time[3:5:])<= 59):
+                        #check if msg[6:8:] is am or pm
+                        if (time[6:8:].lower() == "am" or time[6:8:].lower() =="pm"):
+                            return True
+        return False
+
+    def convertToMilTime(time):
+        if len(time) == 8:
+            if (time[6:8:].lower() == "pm"):
+                time = time.replace(" pm", "")
+                time = str(int(time[0:2:])+12)+time[2:]
+            else:
+                time = time.replace(" am", "")
+            return time
+        else:
+            return time[0:2]+":"+time[2:4]
+
+    def checkEndTime(msg):
+        if (msg.author == message.author and msg.channel == message.channel):
+            #get startTime
+            startTime = selectedEvent['start']['dateTime'][11:16].replace(":", "")
+            #check if time is valid
+            if (checkTime(msg)):
+                #if on same day
+                if (startDate == endDate):
+                    endTime = msg.content
+                    #convert endTime to 24 hour
+                    endTime = convertToMilTime(endTime)
+                    #check if the start time is BEFORE end time
+                    if (int(startTime) < int(endTime)):
+                        return True
+                else:
+                    return True
+            elif msg.content.upper() == "SKIP":
+                return True
+        return False
+
+    try:
+        listEvents = calendarAPI.listEvents()
+        first = True
+        while selection.upper() == "NEXT":
+            if listEvents is None:
+                embed = discord.Embed(
+                    title = "There are no upcoming events to modify!",
+                    description = "Do .newevent to add events to the calendar!", 
+                    color = discord.Color.red(),
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern"))
+                    )
+                await message.channel.send(embed=embed)
+                break
+            if (first):
+                #first page
+                embed = discord.Embed(
+                    title = "Modifying Events",
+                    description = "Listing the 6 Upcoming Events",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                )
+                embed.add_field(name="Select", value="Enter 1-6 to select the event you wish to modify, enter \"NEXT\" to get the next upcoming 6 events, or enter \"CANCEL\" to exit.", inline=False)
+                for currEvent in listEvents:
+                    embed.add_field(name=currEvent['summary'], value="["+currEvent['description']+"]("+currEvent['htmlLink']+")\n"+ currEvent['start']['dateTime'][0:10]+ " "+currEvent['start']['dateTime'][11:16]+" to "+currEvent['end']['dateTime'][0:10]+ " "+currEvent['end']['dateTime'][11:16]+"\nLocation: "+currEvent['location'], inline=True)
+                embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
+                await message.channel.send(embed=embed)
+                selection = await client.wait_for("message", check = selectionCheck, timeout=60)
+                selection = selection.content
+                first = False
+            #if user wants to see more events
+            else:
+                #next page
+                #convert endTime of the last event to utc for timeMin. using timeMin to search for the next events using google API
+                listEvents = select(datetime.datetime.fromisoformat(listEvents[5]['end']['dateTime']).astimezone(pytz.utc).isoformat())
+                embed = discord.Embed(
+                    title = "Modifying Events",
+                    description = "Listing the next 6 Upcoming Events",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                    )
+                embed.add_field(name="Select", value="Enter 1-6 to select the event you wish to modify, enter \"NEXT\" to get the next upcoming 6 events, or enter \"CANCEL\" to exit.", inline=False)
+                for currEvent in listEvents:
+                    embed.add_field(name=currEvent['summary'], value="["+currEvent['description']+"]("+currEvent['htmlLink']+")\n"+ currEvent['start']['dateTime'][0:10]+ " "+currEvent['start']['dateTime'][11:16]+" to "+currEvent['end']['dateTime'][0:10]+ " "+currEvent['end']['dateTime'][11:16]+"\nLocation: "+currEvent['location'], inline=True)
+                embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
+                await message.channel.send(embed=embed)
+                selection = await client.wait_for("message", check = selectionCheck, timeout=60)
+                selection = selection.content
+        
+            if selection.upper() == "CANCEL":
+                embed = discord.Embed(
+                title = "Modifying Events",
+                description = "Cancelled Action",
+                timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                color = discord.Color.red()
+                )
+                await message.channel.send(embed=embed)
+                break
+            elif selection.isnumeric():
+                #select the event user chosen and then modify it
+                selectedEvent = listEvents[int(selection)-1]
+                utc = "05"
+                if (time.localtime().tm_isdst):
+                    utc = "04"
+
+                #title
+                embed = discord.Embed(
+                    title = "Modifying Events",
+                    description = "Please enter a new title. Enter \"SKIP\" to keep existing title.",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                )
+                embed.add_field(name = "Current Title", value = selectedEvent['summary'])
+                await message.channel.send(embed=embed)
+                title = await client.wait_for("message", check=checkFromAuthor, timeout = 60)
+                title = title.content
+                if title.upper() != "SKIP":
+                    selectedEvent['summary'] = title
+                
+                #desc
+                embed = discord.Embed(
+                    title = "Modifying Events",
+                    description = "Please enter a new description. Enter \"SKIP\" to keep existing description.",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                )
+                embed.add_field(name = "Current Description", value = selectedEvent['description'])
+                await message.channel.send(embed=embed)
+                desc = await client.wait_for("message", check=checkFromAuthor, timeout = 60)
+                desc = desc.content
+                if desc.upper() != "SKIP":
+                    selectedEvent['description'] = desc
+
+                #location
+                embed = discord.Embed(
+                    title = "Modifying Events",
+                    description = "Please enter a new location. Enter \"SKIP\" to keep existing locatio.",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                )
+                embed.add_field(name = "Current Location", value = selectedEvent['location'])
+                await message.channel.send(embed=embed)
+                location = await client.wait_for("message", check=checkFromAuthor, timeout = 60)
+                location = location.content
+                if location.upper() != "SKIP":
+                    selectedEvent['location'] = location
+                
+                #Start Date
+                embed = discord.Embed(
+                    title = "Modifying Events",
+                    description = "Please enter a new start date. Enter \"SKIP\" to keep existing start date.",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                )
+                embed.add_field(name = "Current Start Date (format yyyymmdd)", value = getDate(selectedEvent['start']['dateTime']))
+                await message.channel.send(embed=embed)
+                startDate = await client.wait_for("message", check=checkDate, timeout = 60)
+                startDate = startDate.content
+                if startDate.upper() != "SKIP":
+                    #Start Time
+                    embed = discord.Embed(
+                        title = "Modifying Events",
+                        description = "Please enter a new start time. Enter \"SKIP\" to keep existing start time.",
+                        timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                        color = discord.Color.orange()
+                    )
+                    embed.add_field(name = "Current Start Time (format hhmm for 24 hour or hh:mm <am/pm>)", value = getTime(selectedEvent['start']['dateTime']))
+                    await message.channel.send(embed=embed)
+                    startTime = await client.wait_for("message", check=checkTime, timeout = 60)
+                    startTime = startTime.content
+                    startTime = convertToMilTime(startTime)
+                    if startTime.upper() != "SKIP":
+                        selectedEvent['start']['dateTime'] =  startDate[0:4]+"-"+startDate[4:6]+"-"+startDate[6:8]+"T"+startTime+":00-"+utc+":00"
+                    else:
+                        selectedEvent['start']['dateTime'] = selectedEvent['start']['dateTime'][0:10]+"T"+startTime+":00-"+utc+":00"
+
+                #End Date
+                embed = discord.Embed(
+                    title = "Modifying Events",
+                    description = "Please enter a new end date. Enter \"SKIP\" to keep existing end date.",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                )
+                embed.add_field(name = "Current End Date (format yyyymmdd)", value = getDate(selectedEvent['end']['dateTime']))
+                await message.channel.send(embed=embed)
+                endDate = await client.wait_for("message", check=checkEndDate, timeout = 60)
+                endDate = endDate.content
+                if endDate.upper() != "SKIP":
+                
+                    #End Time
+                    embed = discord.Embed(
+                        title = "Modifying Events",
+                        description = "Please enter a new end time. Enter \"SKIP\" to keep existing end time.",
+                        timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                        color = discord.Color.orange()
+                    )
+                    embed.add_field(name = "Current End Time (format hhmm for 24 hour or hh:mm <am/pm>)", value = getTime(selectedEvent['end']['dateTime']))
+                    await message.channel.send(embed=embed)
+                    endTime = await client.wait_for("message", check=checkEndTime, timeout = 60)
+                    endTime = endTime.content
+                    endTime = convertToMilTime(endTime)
+                    if endTime.upper() != "SKIP":
+                        selectedEvent['end']['dateTime'] =  endDate[0:4]+"-"+endDate[4:6]+"-"+endDate[6:8]+"T"+endTime+":00-"+utc+":00"
+                    else:
+                        selectedEvent['end']['dateTime'] = selectedEvent['end']['dateTime'][0:10]+"T"+endTime+":00-"+utc+":00"
+
+                #check if event is recurring
+                if "recurringEventId" in selectedEvent:
+                    print("Recurring Event")
+                    embed = discord.Embed(
+                        title = "Modifying Events",
+                        description = "Warning! This will change all events! Enter \"CONFIRM\" to continue or \"CANCEL\" to quit without changes.",
+                        timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                        color = discord.Color.orange()
+                    )
+                    await message.channel.send(embed=embed)
+                    result = await client.wait_for("message", check=checkFromAuthor, timeout = 60)
+                    if result.ceonten.upper == "CANCEL":
+                        embed = discord.Embed(
+                            title = "Modifying Events",
+                            description = "Cancelled without changes.",
+                            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                            color = discord.Color.red()
+                        )
+                        await message.channel.send(embed=embed)
+                        break
+                if (title.upper() == "SKIP" and desc.upper() == "SKIP" and location.upper() == "SKIP" and startDate.upper() == "SKIP" and endDate.upper() == "SKIP"):
+                    embed = discord.Embed(
+                            title = "Modifying Events",
+                            description = "Cancelled without changes.",
+                            timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                            color = discord.Color.red()
+                        )
+                    await message.channel.send(embed=embed)
+                else:
+                    link = calendarAPI.modifyEvent(selectedEvent)
+                    embed = discord.Embed(
+                        title = title, 
+                        url = link,
+                        description = "Event Modified Successfully!",
+                        timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                        color = discord.Color.blue())
+                    embed.set_author(name = message.author.display_name, icon_url = message.author.avatar_url)
+                    embed.add_field(name = "Description", value = desc, inline=False)
+                    embed.add_field(name = "Location", value = location, inline=False)
+                    embed.add_field(name = "Start Date", value = str(selectedEvent['start']['dateTime']), inline=False)
+                    embed.add_field(name = "End Date", value = str(selectedEvent['end']['dateTime']), inline=False)
+                    embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
+                    await message.channel.send(embed=embed)
+
+    except asyncio.TimeoutError:
+            print("Timed out; received no valid user inputs")
+            embed = discord.Embed(
+                title = "Error", 
+                description = "Event Has Not Been Created.",
+                color = discord.Color.red())
+            embed.add_field(name = "Timed Out", value = "Process cancelled. Please invoke .newevent if you wish to create an event.", inline=False)
+            await message.channel.send(embed=embed)
+    
+    except:
+        embed = discord.Embed(
+            title = "Error", 
+            description = "An Error Has Occured. Please try again.",
+            color = discord.Color.red())
+        await message.channel.send(embed=embed)
+
 client.run(token)
