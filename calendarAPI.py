@@ -104,5 +104,30 @@ def listEvents():
         print('An error occurred: %s' % error)
         return error
 
+def listEventsFromDate(timeMin):
+    try:
+        events_result = service.events().list(calendarId=calID, timeMin=timeMin,
+                                              maxResults=6, singleEvents=True,
+                                              orderBy='startTime').execute()
+        events = events_result.get('items', [])
+
+        if not events:
+            return None
+        else:
+            return events
+
+    except HttpError as error:
+        print('An error occurred: %s' % error)
+        return error
+
+def modifyEvent(event):
+    try:
+        modify = service.events().update(calendarId=calID, eventId=event['id'], body=event).execute()
+        print ('Event modified: %s' % (modify.get('htmlLink')))
+        return modify.get('htmlLink')
+    except HttpError as error:
+        print('An error occurred: %s' % error)
+        return error
+
 if __name__ == '__main__':
     main()
