@@ -4,7 +4,7 @@ TODO:
 ✔️ Create Events using step-by-step commands
 ✔️ Listing Events
 ✔️ Modify Events using step-by-step commands
-⏰ Deleting Events using step-by-step commands
+✔️ Deleting Events using step-by-step commands
 ⏰ Getting notifications from events
 ⏰ Add garbage collection
 ✔️ Runtime command (for the fun of it lol)
@@ -882,9 +882,9 @@ async def modifyEvent(message):
             print("Timed out; received no valid user inputs")
             embed = discord.Embed(
                 title = "Error", 
-                description = "Event Has Not Been Created.",
+                description = "Event Has Not Been Modified.",
                 color = discord.Color.red())
-            embed.add_field(name = "Timed Out", value = "Process cancelled. Please invoke .newevent if you wish to create an event.", inline=False)
+            embed.add_field(name = "Timed Out", value = "Process cancelled. Please invoke .modifyevent if you wish to modify an event.", inline=False)
             await message.channel.send(embed=embed)
     
     except:
@@ -893,5 +893,143 @@ async def modifyEvent(message):
             description = "An Error Has Occured. Please try again.",
             color = discord.Color.red())
         await message.channel.send(embed=embed)
+
+@client.command(name = "delevent", help="Deletes an existing event.")
+async def deleteEvent(message):
+    selection = "NEXT"
+    listEvents = []
+    now = datetime.datetime.now()
+
+    def checkFromAuthor(msg):
+        return msg.author == message.author and msg.channel == message.channel
+    def selectionCheck(msg):
+        selectChoices = ['1', '2', '3', '4', '5', '6', 'NEXT', 'CANCEL']
+        if checkFromAuthor(msg):
+            return msg.content.upper() in selectChoices
+        return False 
+    def select(timeMin):
+        #get next 6 events from given time (utc)
+        nextEvents = calendarAPI.listEventsFromDate(timeMin)
+        return nextEvents
+    def checkResponse(msg):
+        return checkFromAuthor(msg) and (msg.content == selectedEvent['summary'] or msg.content.upper() == "CANCEL") 
+
+    try:
+        listEvents = calendarAPI.listEvents()
+        first = True
+        while selection.upper() == "NEXT":
+            if listEvents is None:
+                embed = discord.Embed(
+                    title = "There are no upcoming events to delete!",
+                    description = "Do .newevent to add events to the calendar!", 
+                    color = discord.Color.red(),
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern"))
+                    )
+                await message.channel.send(embed=embed)
+                break
+            if (first):
+                #first page
+                embed = discord.Embed(
+                    title = "Delete Event",
+                    description = "Listing the 6 Upcoming Events",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                )
+                embed.add_field(name="Select", value="Enter 1-6 to select the event you wish to delete, enter \"NEXT\" to get the next upcoming 6 events, or enter \"CANCEL\" to exit.", inline=False)
+                for currEvent in listEvents:
+                    embed.add_field(name=currEvent['summary'], value="["+currEvent['description']+"]("+currEvent['htmlLink']+")\n"+ currEvent['start']['dateTime'][0:10]+ " "+currEvent['start']['dateTime'][11:16]+" to "+currEvent['end']['dateTime'][0:10]+ " "+currEvent['end']['dateTime'][11:16]+"\nLocation: "+currEvent['location'], inline=True)
+                embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
+                await message.channel.send(embed=embed)
+                selection = await client.wait_for("message", check = selectionCheck, timeout=60)
+                selection = selection.content
+                first = False
+            #if user wants to see more events
+            else:
+                #next page
+                #convert endTime of the last event to utc for timeMin. using timeMin to search for the next events using google API
+                listEvents = select(datetime.datetime.fromisoformat(listEvents[5]['end']['dateTime']).astimezone(pytz.utc).isoformat())
+                embed = discord.Embed(
+                    title = "Delete Event",
+                    description = "Listing the next 6 Upcoming Events",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                    )
+                embed.add_field(name="Select", value="Enter 1-6 to select the event you wish to modify, enter \"NEXT\" to get the next upcoming 6 events, or enter \"CANCEL\" to exit.", inline=False)
+                for currEvent in listEvents:
+                    embed.add_field(name=currEvent['summary'], value="["+currEvent['description']+"]("+currEvent['htmlLink']+")\n"+ currEvent['start']['dateTime'][0:10]+ " "+currEvent['start']['dateTime'][11:16]+" to "+currEvent['end']['dateTime'][0:10]+ " "+currEvent['end']['dateTime'][11:16]+"\nLocation: "+currEvent['location'], inline=True)
+                embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
+                await message.channel.send(embed=embed)
+                selection = await client.wait_for("message", check = selectionCheck, timeout=60)
+                selection = selection.content
+        
+            if selection.upper() == "CANCEL":
+                embed = discord.Embed(
+                title = "Delete Event",
+                description = "Cancelled Action",
+                timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                color = discord.Color.red()
+                )
+                await message.channel.send(embed=embed)
+                break
+            elif selection.isnumeric():
+                #select the event user chosen and then delete it
+                selectedEvent = listEvents[int(selection)-1]
+                embed = discord.Embed(
+                    title = "Delete Event",
+                    description = "Please review the event's details.",
+                    url=selectedEvent['htmlLink'],
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                    )
+                embed.add_field(name = "Title", value = selectedEvent['summary'])
+                embed.add_field(name = "Description", value = selectedEvent['description'])
+                embed.add_field(name = "Start", value = selectedEvent['start']['dateTime'])
+                embed.add_field(name = "End", value = selectedEvent['end']['dateTime'])
+                embed.add_field(name = "Location", value = selectedEvent['location'])
+                await message.channel.send(embed=embed)
+
+                embed = discord.Embed(
+                    title = "Delete Event",
+                    description = "To delete the event, please enter the title of the event. To cancel, type \"CANCEL\"",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.orange()
+                    )
+                await message.channel.send(embed=embed)
+                response = await client.wait_for("message", check=checkResponse, timeout=60)
+                if response.content.upper() == "CANCEL":
+                    embed = discord.Embed(
+                    title = "Delete Event",
+                    description = "Cancelled Action",
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                    color = discord.Color.red()
+                    )
+                    await message.channel.send(embed=embed)
+                    break
+                elif response.content == selectedEvent['summary']:
+                    calendarAPI.deleteEvent(selectedEvent)
+                    embed = discord.Embed(
+                        title = "Deleted Event",
+                        description = "Event Deleted Successfully!",
+                        timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
+                        color = discord.Color.blue())
+                    await message.channel.send(embed=embed)
+                    break                
+
+    except asyncio.TimeoutError:
+        print("Timed out; received no valid user inputs")
+        embed = discord.Embed(
+            title = "Error", 
+            description = "Event Has Not Been Deleted.",
+            color = discord.Color.red())
+        embed.add_field(name = "Timed Out", value = "Process cancelled. Please invoke .delevent if you wish to delete an event.", inline=False)
+        await message.channel.send(embed=embed)
+    
+    """ except:
+        embed = discord.Embed(
+            title = "Error", 
+            description = "An Error Has Occured. Please try again.",
+            color = discord.Color.red())
+        await message.channel.send(embed=embed) """
+
 
 client.run(token)
