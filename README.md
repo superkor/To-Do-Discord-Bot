@@ -62,4 +62,6 @@ End Result:
 
 
 ## Deleting an Event ##
-
+.delEvent will prompt events to delete (in groups of 6). The user will have an option to go navigate and see 6 events at a time.
+![Listing Potential Events to Delete](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/delEvent.png)
+![Confirmation before deletion](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/delConfirm.png)
