@@ -427,7 +427,7 @@ async def create(message: discord.Member):
             recurrenceInterval = await client.wait_for("message", check=checkInterval, timeout = 60)
             recurrenceInterval = recurrenceInterval.content
 
-            #recurrenceInterval
+            #recurrence By Day
             embed = discord.Embed(
             title = "Creating an Event", 
             timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
