@@ -5,8 +5,7 @@ TODO:
 ✔️ Listing Events
 ✔️ Modify Events using step-by-step commands
 ✔️ Deleting Events using step-by-step commands
-⏰ Getting notifications from events
---->⏰⏰ Add a database to store creds and tokens, with a tag associating them to a server id and announcement channel id
+✔️ Getting notifications from events (need further verification on bug fixes but so far it seems to work lol)
 ⏰ Add garbage collection
 ✔️ Runtime command (for the fun of it lol)
 """
@@ -16,7 +15,7 @@ import discord
 from discord.ext import tasks, commands
 import calendarAPI, datetime, asyncio, time, calendar, event, pytz
 from datetime import timedelta
-import json
+import dataBase
 
 token = open("token.txt", "r").readline()
 
@@ -25,9 +24,7 @@ intents.members = True
 client = commands.Bot(command_prefix = ".", intents=intents)
 
 botStarted = datetime.datetime.utcnow()
-
-#annoucements channel
-announcements = None
+allowed_mentions = discord.AllowedMentions(everyone = True)
 
 #startUp
 startUp = False
@@ -52,10 +49,6 @@ async def on_ready():
     global startUp
     try:
         calendarAPI.main()
-
-        #go through the servers the bot is in and check if announcementChannel is set
-        for guild in client.guilds:
-            print(guild.id)
     except:
         print("Error with calendarAPI.py. Stopping bot...")
         exit()
@@ -1041,35 +1034,51 @@ async def deleteEvent(message):
             color = discord.Color.red())
         await message.channel.send(embed=embed) """
 
-@client.command(name = "setChannel", help="Sets the announcement channel")
-async def announcement(message, channel):
-    global announcement
-    print(channel)
-    channel = channel.replace("<", "")
-    channel = channel.replace("#", "")
-    channel = channel.replace(">", "")
-    print(client.get_channel(int(channel)))
-    print(message.guild.id)
-
 """
-Scans through the next event and sends out reminders depending on settings set on that event.
+Scans through the next 3 events and sends out reminders depending on settings set on that event.
 Background task will trigger every 1 minute.
 """
-@tasks.loop(seconds=30)
+@tasks.loop(seconds=60)
 async def background_task():
     if startUp:
-        now = datetime.datetime.now()
-        listEvents = calendarAPI.listOneEvent()
-        reminder = listEvents[0]['reminders']['overrides'][0]['minutes']
-        startTime = listEvents[0]['start']['dateTime']
-        startTime = startTime.replace(startTime[19:],"")
-        title = listEvents[0]['summary']
-        print(title)
-        print(reminder)
-        print(startTime)
-        #check if time is within reminder
-        if (now + timedelta(minutes=reminder) <= datetime.datetime.fromisoformat(startTime)):
-            pass
+        now = datetime.datetime.now().isoformat()
+        listEvents = calendarAPI.listThreeEvents()
+        #search through the next 3 events
+        for x in (listEvents):
+            reminder = x['reminders']['overrides'][0]['minutes']
+            startTime = x['start']['dateTime']
+            startTime = startTime.replace(startTime[19:],"")
+            title = x['summary']
+            htmlLink = x['htmlLink']
+            id = x['id']
+
+            reminderTime = datetime.datetime.fromisoformat(startTime) - timedelta(minutes = int(reminder))
+            reminderTime = reminderTime.isoformat()
+
+            #if the reminderTime has not been passed, add the upcoming event to the database
+            if (reminderTime > now):
+                #check if event has already been added
+                if not dataBase.isAdded(id):
+                    dataBase.addEvent(title, startTime, reminderTime, htmlLink, id)
+                    print("ADDED TO DATABASE!")        
+            
+        #search through the database and send a reminder when the current time (now) has reached reminderTime of that event
+        for y in dataBase.getEvents():
+            if datetime.datetime.fromisoformat(y[2]).isoformat() <= now:
+                embed = discord.Embed(
+                    title = "Reminder",
+                    description = y[0] + " is starting at "+ y[1] +"!", 
+                    color = discord.Color.blue(),
+                    timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern"))
+                    )
+                embed.add_field(name="Link: ", value=y[3])
+                dataBase.deleteEvent(y[4])
+                channel = await client.fetch_channel(885573483814338560)
+                await channel.send("@everyone")
+                await channel.send(embed=embed)
+
+        
+
     
 
 
