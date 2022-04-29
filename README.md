@@ -1,4 +1,5 @@
 # To-Do-Discord-Bot
+
 A Discord bot that will allow an user to view, modify, and add events to a google calendar.
 The bot will then send out reminders to the server based on the event.
 
@@ -6,7 +7,7 @@ This bot uses both the Discord and Google REST APIs and will require both the di
 
 Events will be created based on the calID in the calID.txt. To get the calID, go to your google calendar, select on the specific calendar you wish to use > Settings and sharing > Integrate Calendar > Calendar ID. Copy and paste the ID into a txt file named "calID".
 
-#Creating an Event#
+# Creating an Event #
 
 To start the process of creating an event, type ".newevent" into the channel. You will be prompted to enter an title for the event.
 ![Invoke .newevent](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/newevent.png)
@@ -38,13 +39,13 @@ Setting By Day is optional.
 
 ![Created New Event with Frequency](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/neweventFreq.png)
 
-##Listing Events##
+## Listing Events ##
 
 Lists the next 6 upcoming events
 
 ![Invoke .listevents](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/listEvents.png)
 
-##Modifiying an Event##
+## Modifiying an Event ##
 ![Invoke .modifyevent](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyEvent.png)
 ![Modify Title](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyTitle.png)
 ![Modify Description](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyDesc.png)
@@ -59,4 +60,6 @@ End Result:
 
 ![Modified Event](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifiedEvent.png)
 
+
+## Deleting an Event ##
 
