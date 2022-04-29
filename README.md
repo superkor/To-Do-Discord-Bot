@@ -6,7 +6,7 @@ This bot uses both the Discord and Google REST APIs and will require both the di
 
 Events will be created based on the calID in the calID.txt. To get the calID, go to your google calendar, select on the specific calendar you wish to use > Settings and sharing > Integrate Calendar > Calendar ID. Copy and paste the ID into a txt file named "calID".
 
-Creating an Event:
+#Creating an Event#
 
 To start the process of creating an event, type ".newevent" into the channel. You will be prompted to enter an title for the event.
 ![Invoke .newevent](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/newevent.png)
@@ -22,12 +22,15 @@ The bot will then prompt the following:
 ![Setting Frequency](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/newfrequency.png)
 
 If you select none:
+
 ![Created New Event With No Frequency](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/neweventNoFreq.png)
 
 If you select either "DAILY" or "WEEKLY":
+
 ![Setting Recurrence End/Count](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/newEventRecurr.png)
 
 Setting Recurrence Interval is optional.
+
 ![Setting Recurrence Interval](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/newEventRecurrInterval.png)
 
 Setting By Day is optional.
@@ -35,5 +38,25 @@ Setting By Day is optional.
 
 ![Created New Event with Frequency](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/neweventFreq.png)
 
+##Listing Events##
+
+Lists the next 6 upcoming events
+
+![Invoke .listevents](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/listEvents.png)
+
+##Modifiying an Event##
+![Invoke .modifyevent](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyEvent.png)
+![Modify Title](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyTitle.png)
+![Modify Description](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyDesc.png)
+![Modify Start Date](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyStartDate.png)
+![Modify Start Time](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyStartTime.png)
+![Modify End Date](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyEndDate.png)
+![Modify End Time](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifyEndTime.png)
+
+Note: .modifyevent does not allow a user to change the recurrence rules.
+
+End Result:
+
+![Modified Event](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/modifiedEvent.png)
 
 
