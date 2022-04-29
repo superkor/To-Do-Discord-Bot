@@ -137,11 +137,11 @@ def deleteEvent(event):
         print('An error occurred: %s' % error)
         return error
 
-def listOneEvent():
+def listThreeEvents():
     try:
         now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
         events_result = service.events().list(calendarId=calID, timeMin=now,
-                                              maxResults=1, singleEvents=True,
+                                              maxResults=3, singleEvents=True,
                                               orderBy='startTime').execute()
         events = events_result.get('items', [])
 
