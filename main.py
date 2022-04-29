@@ -10,6 +10,7 @@ TODO:
 ✔️ Runtime command (for the fun of it lol)
 """
 
+from lib2to3.pytree import convert
 from tokenize import String
 import discord
 from discord.ext import tasks, commands
@@ -221,7 +222,8 @@ async def create(message: discord.Member):
         if len(time) == 8:
             if (time[6:8:].lower() == "pm"):
                 time = time.replace(" pm", "")
-                time = str(int(time[0:2:])+12)+time[2:]
+                if int(time[0:2:]) <12:
+                    time = str(int(time[0:2:])+12)+time[2:]
                 time = time.replace(":", "")
             else:
                 time = time.replace(" am", "")
@@ -249,7 +251,7 @@ async def create(message: discord.Member):
         return (checkText(msg) and msg.content.upper() == "DAILY" or 
         msg.content.upper() == "WEEKLY" or msg.content.upper() == "NONE")
     def checkRecEnd(msg):
-        if checkText(msg) and checkNum(msg):
+        if checkText(msg):
             #if entered date
             if len(msg.content) == 8:
                 if (checkDate(msg)):
@@ -263,10 +265,11 @@ async def create(message: discord.Member):
             return int(msg.content) <= 10
         return False
     def checkByDay(msg):
+        byDayCheck = ["MO", "TU", "WE", "TH", "FR", "SA", "SU", "NO"]
         if checkText(msg) and len(msg.content) == 2:
-            byDayCheck = ["MO", "TU", "WE", "TH", "FR", "SA", "SU", "NO"]
             return msg.content.upper() in byDayCheck
-        return False
+        else:
+            return False
 
     try:
         #title
@@ -430,8 +433,8 @@ async def create(message: discord.Member):
             timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
             embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
-            embed.add_field(name= "Recurrence ByDay", value = "Please enter the day of the week you want the event to repeat (MO,TU,WE,TH,FR,SA,SU).", inline=False)
-            embed.add_field(name= "Skip Recurrence ByDay", value = "Please enter \"NO\" to skip.", inline=False)
+            embed.add_field(name= "Recurrence By Day", value = "Please enter the day of the week you want the event to repeat (MO,TU,WE,TH,FR,SA, or SU).", inline=False)
+            embed.add_field(name= "Skip Recurrence By Day", value = "Please enter \"NO\" to skip.", inline=False)
             await message.channel.send(embed=embed)
             byday = await client.wait_for("message", check=checkByDay, timeout = 60)
             byday = byday.content
@@ -484,7 +487,7 @@ async def create(message: discord.Member):
             else:
                 embed.add_field(name = "Recurring", value = "Forever", inline=False)
             embed.add_field(name = "Recurrence Interval", value = recurrenceInterval, inline=False)
-            if byday != "NO":
+            if byday.upper() != "NO":
                 embed.add_field(name = "Every", value = byday, inline=False)
         
         embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
