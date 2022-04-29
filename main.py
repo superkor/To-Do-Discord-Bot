@@ -770,7 +770,7 @@ async def modifyEvent(message):
                 #location
                 embed = discord.Embed(
                     title = "Modifying Events",
-                    description = "Please enter a new location. Enter \"SKIP\" to keep existing locatio.",
+                    description = "Please enter a new location. Enter \"SKIP\" to keep existing location.",
                     timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
                     color = discord.Color.orange()
                 )
