@@ -6,6 +6,7 @@ TODO:
 ✔️ Modify Events using step-by-step commands
 ✔️ Deleting Events using step-by-step commands
 ⏰ Getting notifications from events
+--->⏰⏰ Add a database to store creds and tokens, with a tag associating them to a server id and announcement channel id
 ⏰ Add garbage collection
 ✔️ Runtime command (for the fun of it lol)
 """
