@@ -10,12 +10,12 @@ TODO:
 ✔️ Runtime command (for the fun of it lol)
 """
 
-from distutils.log import error
-from lib2to3.pytree import convert
 from tokenize import String
 import discord
-from discord.ext import commands
+from discord.ext import tasks, commands
 import calendarAPI, datetime, asyncio, time, calendar, event, pytz
+from datetime import timedelta
+import json
 
 token = open("token.txt", "r").readline()
 
@@ -24,6 +24,13 @@ intents.members = True
 client = commands.Bot(command_prefix = ".", intents=intents)
 
 botStarted = datetime.datetime.utcnow()
+
+#annoucements channel
+announcements = None
+
+#startUp
+startUp = False
+
 
 class AllNum(Exception):
     """Exception raised for string not containing all numbers"""
@@ -41,13 +48,20 @@ class DateLength(Exception):
 @client.event
 async def on_ready():
     #initalizes calendar API
+    global startUp
     try:
         calendarAPI.main()
+
+        #go through the servers the bot is in and check if announcementChannel is set
+        for guild in client.guilds:
+            print(guild.id)
     except:
         print("Error with calendarAPI.py. Stopping bot...")
         exit()
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name="your calendar!"))
     print(f"{client.user} has connected to Discord!")
+    startUp = True
+
 
 """
 .newevent takes arguments title (String), desc (String), startTime (String: yyyymmddhhmm), endTime(String: yyyymmddhhmm), 
@@ -220,7 +234,8 @@ async def create(message: discord.Member):
                 time = time.replace(":", "") 
         return time
     def checkNum(msg):
-        return (checkText(msg) and msg.content.isnumeric())
+        if (checkText(msg) and msg.content.isnumeric()):
+            return int(msg.content) <= 180
     def checkEndTime(msg):
         if (msg.author == message.author and msg.channel == message.channel):
             #check if time is valid
@@ -356,7 +371,6 @@ async def create(message: discord.Member):
         await message.channel.send(embed=embed)
         location = await client.wait_for("message", check=checkText, timeout = 60)
         location = location.content
-        print(location)
 
         #Reminder
         embed = discord.Embed(
@@ -364,11 +378,10 @@ async def create(message: discord.Member):
             timestamp = datetime.datetime.now().astimezone(pytz.timezone("US/Eastern")),
             color = discord.Color.orange())
         embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
-        embed.add_field(name= "Reminder", value = "Please enter when you want a reminder before the event starts (in minutes)?", inline=False)
+        embed.add_field(name= "Reminder", value = "Please enter when you want a reminder before the event starts (in minutes)? Max 180 minutes.", inline=False)
         await message.channel.send(embed=embed)
         reminder = await client.wait_for("message", check=checkNum, timeout = 60)
         reminder = reminder.content
-        print(reminder)
 
         freqBool = True
         #Frequency
@@ -381,7 +394,6 @@ async def create(message: discord.Member):
         await message.channel.send(embed=embed)
         frequency = await client.wait_for("message", check=checkFreq, timeout = 60)
         frequency = frequency.content.upper()
-        print(frequency)
 
         if (frequency == "NONE"):
             freqBool = False
@@ -400,7 +412,6 @@ async def create(message: discord.Member):
             await message.channel.send(embed=embed)
             recEnd = await client.wait_for("message", check=checkRecEnd, timeout = 60)
             recEnd = recEnd.content
-            print(recEnd)
             if (int(recEnd) == 0):
                 unlimited = True
             elif (int(recEnd) <=100):
@@ -418,7 +429,6 @@ async def create(message: discord.Member):
             await message.channel.send(embed=embed)
             recurrenceInterval = await client.wait_for("message", check=checkInterval, timeout = 60)
             recurrenceInterval = recurrenceInterval.content
-            print(recurrenceInterval)
 
             #recurrenceInterval
             embed = discord.Embed(
@@ -431,7 +441,6 @@ async def create(message: discord.Member):
             await message.channel.send(embed=embed)
             byday = await client.wait_for("message", check=checkByDay, timeout = 60)
             byday = byday.content
-            print(byday)
         
             #infinite repeat
             if (unlimited):
@@ -1031,5 +1040,37 @@ async def deleteEvent(message):
             color = discord.Color.red())
         await message.channel.send(embed=embed) """
 
+@client.command(name = "setChannel", help="Sets the announcement channel")
+async def announcement(message, channel):
+    global announcement
+    print(channel)
+    channel = channel.replace("<", "")
+    channel = channel.replace("#", "")
+    channel = channel.replace(">", "")
+    print(client.get_channel(int(channel)))
+    print(message.guild.id)
 
+"""
+Scans through the next event and sends out reminders depending on settings set on that event.
+Background task will trigger every 1 minute.
+"""
+@tasks.loop(seconds=30)
+async def background_task():
+    if startUp:
+        now = datetime.datetime.now()
+        listEvents = calendarAPI.listOneEvent()
+        reminder = listEvents[0]['reminders']['overrides'][0]['minutes']
+        startTime = listEvents[0]['start']['dateTime']
+        startTime = startTime.replace(startTime[19:],"")
+        title = listEvents[0]['summary']
+        print(title)
+        print(reminder)
+        print(startTime)
+        #check if time is within reminder
+        if (now + timedelta(minutes=reminder) <= datetime.datetime.fromisoformat(startTime)):
+            pass
+    
+
+
+background_task.start()
 client.run(token)
