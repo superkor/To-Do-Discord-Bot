@@ -5,11 +5,17 @@ The bot will then send out reminders to the server based on the event.
 
 This bot uses both the Discord and Google REST APIs and will require both the discord token and a google OAuth credentials from Google Cloud Platform. On first time use, you will be prompted to log in (for google to generate a token).
 
+For reminders, the bot stores the 3 upcoming events into an SQL (sqlite3) database. The event's title, start date and time, reminder time, its event URL, and event ID will be stored. Once the reminder has been sent, the bot will then delete that event from the database.
+
+Sample database:
+![Sample Database](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/sampleSQLDatabase.png)
+
 Events will be created based on the calID in the calID.txt. To get the calID, go to your google calendar, select on the specific calendar you wish to use > Settings and sharing > Integrate Calendar > Calendar ID. Copy and paste the ID into a txt file named "calID".
 
 # Creating an Event #
 
 To start the process of creating an event, type ".newevent" into the channel. You will be prompted to enter an title for the event.
+
 ![Invoke .newevent](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/newevent.png)
 
 The bot will then prompt the following:
@@ -65,3 +71,8 @@ End Result:
 .delEvent will prompt events to delete (in groups of 6). The user will have an option to go navigate and see 6 events at a time.
 ![Listing Potential Events to Delete](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/delEvent.png)
 ![Confirmation before deletion](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/delConfirm.png)
+
+## Reminders ##
+Every minute, the bot will check the upcoming 3 events and will ping everyone in the server as a reminder. The reminder is determined during the event creation (eg. if the event is set to 10 minutes for reminder, the bot will ping everyone 10 minutes before the event starts). The event is subsequently deleted from the database.
+
+![Reminder](https://github.com/superkor/To-Do-Discord-Bot/blob/main/images/reminder.png)
